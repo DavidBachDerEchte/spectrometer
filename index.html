@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<link href="./dist/css/style.css" rel="stylesheet">
+	<script defer src="./dist/js/script.js"></script>
+	<title>Light Spectrometer</title>
+</head>
+<body>
+<div class="Information">
+<div class="left">
+<h1>Light Spectrometer</h1>
+	<h2>Please reload the page before analyzing an image again! <br>  Only with Black/White Images where the links are White.</h2>
+<input accept="image/*" id="imageInput" onchange="analyzeImage()" type="file">
+</div>
+	<div class="right">
+		<button onclick="downloadSortedWavelengths()">Download Wavelengths</button>
+	</div>
+</div>
+<br>
+<br>
+<div class="canvases">
+	<canvas id="canvas"></canvas>
+	<canvas height="800" id="canvasgraph" style="margin-top: 100px;"></canvas>
+</div>
+</body>
+</html>
