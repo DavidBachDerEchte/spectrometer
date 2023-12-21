@@ -1,16 +1,20 @@
 const canvas = document.getElementById('canvas');
 const canvasgraph = document.getElementById('canvasgraph');
 const ctx = canvas.getContext('2d');
-const ctx2 = canvasgraph.getContext('2d');
+let ctx2 = canvasgraph.getContext('2d');
 
 
-const dataPoints = [];
-const WavelengthPeak = [];
+let dataPoints = [];
+let wavelengths = [];
+let whatIsIt = '';
+let countVL = 0;
+let VLArray = [];
 
 
-function analyzeImage() {
+function analyzeImage(value) {
     const input = document.getElementById('imageInput');
     const file = input.files[0];
+
 
     if (file) {
         const reader = new FileReader();
@@ -23,13 +27,34 @@ function analyzeImage() {
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0, img.width, img.height);
 
+                if (value === 'UV') {
+                    whatIsIt = 'UV';
+                    dataPoints = [];
+                    wavelengths = [];
+                    VLArray = [];
+                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
+                    analyzeSpectrum();
+                    drawGraph();
+                } else if (value === 'VisibleLight') {
+                    whatIsIt = 'Visible Light';
+                    dataPoints = [];
+                    wavelengths = [];
+                    VLArray = [];
+                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
+                    analyzeSpectrum();
+                    drawGraphVL();
+                } else if (value === 'Infrared') {
+                    whatIsIt = 'Infrared';
+                    dataPoints = [];
+                    wavelengths = [];
+                    VLArray = [];
+                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
+                }
+
+                // console.log(dataPoints);
+                // console.log(wavelengths);
 
 
-                analyzeSpectrum();
-
-                drawGraph();
-
-                console.log(WavelengthPeak);
             };
 
             img.src = e.target.result;
@@ -43,128 +68,207 @@ function analyzeImage() {
 function analyzeSpectrum() {
     for (let x = 0; x < canvas.width; x++) {
         const columnData = ctx.getImageData(x, 0, 1, canvas.height).data;
+        let alphaCode = 0;
+        let VLCode = 0;
+        let IRCode = 0;
 
-        const colorCode = getColorCodeForColumn(columnData);
+        if (whatIsIt === 'UV') {
+            alphaCode = getAlphaCodeForColumnUV(columnData);
+        } else if (whatIsIt === 'Visible Light') {
+            VLCode = getAlphaCodeForColumnVisibleLight(columnData);
+        }
 
-        const wavelength = colorToWavelength(colorCode);
 
-        // console.log(`Wavelength for pixel at (${x}): ${wavelength} nm`);
-        // console.log(`Wavelength for pixel at (${x}): ${Object.values(colorCode)} nm`);
+        // console.log(colorCode);
+        dataPoints.push({x: x, y: alphaCode.averageAlpha, color: VLCode, ir: IRCode});
 
-        // console.log('X: ' + x);
-        console.log('Y: ' + wavelength);
 
-        dataPoints.push({x: x, y: wavelength});
     }
+    return 0;
 }
 
 
-function getColorCodeForColumn(columnData) {
-    let totalRed = 0;
-    let totalGreen = 0;
-    let totalBlue = 0;
+function getAlphaCodeForColumnUV(columnData) {
+    let totalAlpha = 0;
 
-    for (let i = 0; i < columnData.length; i += 4) {
-        totalRed += columnData[i];
-        totalGreen += columnData[i + 1];
-        totalBlue += columnData[i + 2];
+    for (let i = 0; i < columnData.length; i += 5) {
+        totalAlpha += columnData[i];
     }
 
-    const averageRed = totalRed / (columnData.length / 4);
-    const averageGreen = totalGreen / (columnData.length / 4);
-    const averageBlue = totalBlue / (columnData.length / 4);
+    const averageAlpha = totalAlpha / (columnData.length / 5 / 5);
 
-    return {averageRed, averageGreen, averageBlue};
+    return {averageAlpha};
 }
 
-function colorToWavelength(rgb) {
-    const IntensityMax = 255; // Assuming IntensityMax is defined somewhere
-    const normalizedRgb = Object.values(rgb).map(value => value / IntensityMax);
-
-    let wavelength = 380;
-
-
-    // Find the dominant color component
-    const maxColorCTW = Math.max(...normalizedRgb);
-
-
-    const maxIndex = normalizedRgb.indexOf(maxColorCTW);
-
-    // console.log(maxIndex);
-    // console.log(maxColor);
-
-    switch (maxIndex) {
-        case 0: // Red is dominant
-        case 1: // Green is dominant
-        case 2: // Blue is dominant
-            wavelength += maxColorCTW * (780 - 380);
-            break;
-        default:
-            break;
-    }
-    return wavelength;
-}
 
 
 function drawGraph() {
-    for (let i = 0; i < dataPoints.length; i++) {
-        const point = dataPoints[i];
-        if (point.y >= 615) {
-            point.y = Math.round(point.y / 0.01) * 0.01;
-            WavelengthPeak.push(point.y + 'nm');
-        }
-    }
+    const scalingFactor = 50;
+    const scalingFactorPeak = 20;
 
 
     ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height);
 
     ctx2.beginPath();
     canvasgraph.width = canvas.width;
-    ctx2.fillStyle = 'blue';
+    canvasgraph.height = canvas.height;
+    ctx2.fillStyle = 'white';
     ctx2.moveTo(0, 0);
     ctx2.lineTo(0, canvasgraph.height);
     ctx2.lineTo(canvasgraph.width, canvasgraph.height);
-    ctx2.lineTo(canvas.width, 615);
     ctx2.stroke();
-
-
     ctx2.beginPath();
 
+    dataPoints.forEach((point, index) => {
+        let scaledY = 0;
+        let wavelength = 0;
+        if (point.y >= 940) {
+            scaledY = canvasgraph.height - point.y / scalingFactorPeak;
+            wavelength = wavelength + scaledY * (400 - 10) / 50;
 
-    dataPoints.forEach(point => {
-        // const y = point.y;
+        } else {
+            scaledY = canvasgraph.height - point.y / scalingFactor;
+        }
+        const updatedX = point.x;
 
-        const y = canvasgraph.height - point.y;
+        wavelength = Math.round(wavelength * 100) / 100;
 
-        ctx2.lineTo(point.x, point.y);
+        wavelengths.push({x: point.x, c: wavelength});
 
-        ctx2.arc(point.x, y, 0, 0, 0);
+        ctx2.lineTo(updatedX, scaledY);
     });
+
+    // console.log(dataPoints);
 
     ctx2.strokeStyle = 'blue';
 
     ctx2.stroke();
-
     ctx2.fill();
 
     ctx2.closePath();
 
+    return 0;
+
 }
 
+
+
+
+
 function downloadSortedWavelengths() {
-    const sortedWavelengths = WavelengthPeak.sort((a, b) => parseFloat(b) - parseFloat(a));
-    const blob = new Blob([sortedWavelengths.join('\n')], {type: 'text/plain'});
+    const filteredWavelengths = wavelengths.filter(item => item.c !== 0);
+    const sortedWavelengths = filteredWavelengths.slice().sort((a, b) => a.x - b.x);
 
-    const a = document.createElement('a');
+    let regularFont = '../../font/Montserrat-Regular.ttf';
 
-    if (WavelengthPeak.length === 0) {
-        alert('Please analyze an image first!');
+    if (sortedWavelengths.length === 0) {
+        alert('No valid data to download!');
         return;
     }
 
-    a.href = URL.createObjectURL(blob);
-    a.download = 'Wavelengths.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const pdf = new jsPDF();
+
+    const date = new Date();
+    const day = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes();
+
+    // Page 1
+    pdf.setFontSize(16);
+    pdf.addFont(regularFont);
+    pdf.text(`Spectroscopy`, 10, 10);
+
+    pdf.setFontSize(10);
+    pdf.addFont(regularFont);
+    pdf.text(`${day}`, 170, 10);
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.line(0, 15, 10000, 15);
+
+    const inputImgURL = canvas.toDataURL();
+    const graphImgURL = canvasgraph.toDataURL();
+
+    pdf.setFontSize(40); // Convert rem to px (1rem = 16px)
+    pdf.text(10, 30, `${whatIsIt} Spectrum`);
+
+    pdf.addImage(inputImgURL, 'JPEG', 10, 40, 90, 20);
+    pdf.addImage(graphImgURL, 'JPEG', 10, 65, 90, 20);
+
+
+    pdf.setFontSize(14);
+    pdf.addFont(regularFont);
+    pdf.text(10, 100, "The list is from left to right.");
+    let yPosition = 110;
+
+    let loopCount = 0;
+    let secondpage = 0;
+    let howManyPerPage = 26;
+
+    sortedWavelengths.forEach(item => {
+        // Überprüfen, ob die maximale Anzahl von Schleifeniterationen erreicht ist
+
+        if (secondpage > 26) {
+            howManyPerPage = 41;
+        }
+
+
+        if (loopCount < howManyPerPage) {
+            pdf.addFont(regularFont);
+            pdf.text(10, yPosition, `Wavelength: ${item.x}nm`);
+            yPosition += 7;
+
+            // Inkrementiere die Zählvariable
+            loopCount++;
+            secondpage++;
+        } else {
+            // Falls die maximale Anzahl von Schleifeniterationen erreicht ist, füge eine neue Seite hinzu
+            pdf.addPage();
+
+            // Setze die Zählvariable zurück
+            yPosition = 10;
+            loopCount = 0;
+        }
+    });
+
+
+    // Add second page
+    pdf.addPage();
+    pdf.setFontSize(28);
+    pdf.text("Important note about our  \n" +
+        "web-based spectroscopy software!", 10, 20);
+
+    // Add Lorem Ipsum text (you can replace this with your actual text)
+    pdf.setFontSize(16);
+    pdf.text("We are pleased to present our innovative web-based spectroscopy software, \n" +
+        "which is tailored to your analytical needs. However, as the sole developer, \n" +
+        "I must emphasize that the software may not be completely bug-free.", 10, 45);
+
+    pdf.setFontSize(16);
+    pdf.text("Although I have invested a great deal of time and effort to ensure \n" +
+        "the reliability of the software, I strongly recommend that users thoroughly \n" +
+        "review the software and check for potential problems before relying on the \n" +
+        "software's results.", 10, 75);
+
+    pdf.setFontSize(16);
+    pdf.text("I would also like to point out that, as the sole creator, \n" +
+        "I cannot accept any liability for the consequences of using the software \n" +
+        "or the data it calculates. Users are encouraged to use the software responsibly \n" +
+        "and to recognize their own responsibility \n" +
+        "for the interpretation and application of the results.", 10, 105);
+
+    pdf.setFontSize(16);
+    pdf.text("Your feedback is invaluable and I will endeavor to address any issues \n" +
+        "or concerns that may arise. If you have any questions or encounter any \n" +
+        "difficulties, please feel free to contact me directly.", 10, 145);
+
+    pdf.setFontSize(16);
+    pdf.text("Thank you for choosing our web-based spectroscopy software. \n" +
+        "I greatly appreciate your understanding and cooperation as I work to \n" +
+        "improve and refine the software to ensure an optimal user experience.", 10, 175);
+
+
+    // Save the PDF
+    pdf.save(`Spectroscopy ${whatIsIt}.pdf`);
 }
+
+
+
+

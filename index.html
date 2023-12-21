@@ -4,25 +4,35 @@
 	<meta charset="UTF-8">
 	<meta content="width=device-width, initial-scale=1.0" name="viewport">
 	<link href="./dist/css/style.css" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.debug.js"></script>
 	<script defer src="./dist/js/script.js"></script>
+	<script defer src="./dist/js/vl.js"></script>
 	<title>Light Spectrometer</title>
+
 </head>
 <body>
 <div class="Information">
 <div class="left">
 <h1>Light Spectrometer</h1>
 	<h2>Please reload the page before analyzing an image again! <br>  Only with Black/White Images where the links are White.</h2>
-<input accept="image/*" id="imageInput" onchange="analyzeImage()" type="file">
+<input accept="image/*" id="imageInput" type="file">
+	<input type="radio" name="WhatIsIt" value="UV" id="UV" onclick="analyzeImage(this.value)">
+	<label for="UV">UV</label>
+	<input type="radio" name="WhatIsIt" value="VisibleLight" id="VisibleLight" onclick="analyzeImage(this.value)">
+	<label for="VisibleLight">Visible Light</label>
+	<input type="radio" name="WhatIsIt" value="Infrared" id="InfraRed" onclick="analyzeImage(this.value)">
+	<label for="InfraRed">Infra Red</label>
 </div>
 	<div class="right">
-		<button onclick="downloadSortedWavelengths()">Download Wavelengths</button>
+		<button onclick="downloadSortedWavelengths()">Download Data Sheet</button>
 	</div>
 </div>
 <br>
 <br>
 <div class="canvases">
 	<canvas id="canvas"></canvas>
-	<canvas height="800" id="canvasgraph" style="margin-top: 100px;"></canvas>
+	<canvas id="canvasgraph" style="margin-top: 100px;"></canvas>
 </div>
 </body>
 </html>
