@@ -1,107 +1,4 @@
-const canvas = document.getElementById('canvas');
-const canvasgraph = document.getElementById('canvasgraph');
-const ctx = canvas.getContext('2d');
-let ctx2 = canvasgraph.getContext('2d');
-
-
-let dataPoints = [];
-let wavelengths = [];
-let whatIsIt = '';
-let VLArray = [];
-
-function whichDownload() {
-    if (whatIsIt === 'UV') {
-        downloadSortedWavelengths();
-    } else if (whatIsIt === 'Visible Light') {
-        downloadSortedWavelengthsVL();
-    } else if (whatIsIt === 'IR') {
-        downloadSortedWavelengthsIR();
-    }
-}
-
-
-function analyzeImage(value) {
-    const input = document.getElementById('imageInput');
-    const file = input.files[0];
-
-
-    if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const img = new Image();
-
-            img.onload = function () {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-
-                if (value === 'UV') {
-                    whatIsIt = 'UV';
-                    dataPoints = [];
-                    wavelengths = [];
-                    VLArray = [];
-                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
-                    analyzeSpectrum();
-                    drawGraph();
-                } else if (value === 'VisibleLight') {
-                    whatIsIt = 'Visible Light';
-                    dataPoints = [];
-                    wavelengths = [];
-                    VLArray = [];
-                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
-                    analyzeSpectrum();
-                    drawGraphVL();
-                } else if (value === 'IR') {
-                    whatIsIt = 'IR';
-                    dataPoints = [];
-                    wavelengths = [];
-                    VLArray = [];
-                    ctx2.clearRect(0, 0, canvasgraph.width, canvasgraph.height); // Clear the canvas.
-                    analyzeSpectrum();
-                    drawGraphIR();
-                }
-
-                // console.log(dataPoints);
-                // console.log(wavelengths);
-
-
-            };
-
-            img.src = e.target.result;
-
-        };
-
-        reader.readAsDataURL(file);
-    }
-}
-
-function analyzeSpectrum() {
-    for (let x = 0; x < canvas.width; x++) {
-        const columnData = ctx.getImageData(x, 0, 1, canvas.height).data;
-        let alphaCode = 0;
-        let VLCode = 0;
-        let IRCode = 0;
-
-        if (whatIsIt === 'UV') {
-            alphaCode = getAlphaCodeForColumnUV(columnData);
-        } else if (whatIsIt === 'Visible Light') {
-            VLCode = getAlphaCodeForColumnVL(columnData, x, canvas.width);
-        } else if (whatIsIt === 'IR') {
-            IRCode = getAlphaCodeForColumnIR(columnData);
-        }
-
-
-        // console.log(colorCode);
-        dataPoints.push({x: x, y: alphaCode.averageAlpha, yVL: VLCode.averageAlpha, yIR: IRCode.averageAlpha});
-
-
-    }
-    return 0;
-}
-
-
-function getAlphaCodeForColumnUV(columnData) {
+function getAlphaCodeForColumnIR(columnData) {
     let totalAlpha = 0;
 
     for (let i = 0; i < columnData.length; i += 5) {
@@ -113,9 +10,7 @@ function getAlphaCodeForColumnUV(columnData) {
     return {averageAlpha};
 }
 
-
-
-function drawGraph() {
+function drawGraphIR() {
     const scalingFactor = 50;
     const scalingFactorPeak = 20;
 
@@ -134,19 +29,19 @@ function drawGraph() {
 
     dataPoints.forEach((point, index) => {
         let scaledY = 0;
-        let wavelength = 0;
-        if (point.y >= 940) {
-            scaledY = canvasgraph.height - point.y / scalingFactorPeak;
-            wavelength = wavelength + scaledY * (400 - 10) / 50;
+        let wavelength = 700;
+        if (point.yIR >= 940) {
+            console.log(point.yIR);
+            scaledY = canvasgraph.height - point.yIR / scalingFactorPeak;
+            wavelength = wavelength + scaledY * (1000 - 700) / 50;
+
+
+            wavelengths.push({x: point.x, c: wavelength});
 
         } else {
-            scaledY = canvasgraph.height - point.y / scalingFactor;
+            scaledY = canvasgraph.height - point.yIR / scalingFactor;
         }
         const updatedX = point.x;
-
-        wavelength = Math.round(wavelength * 100) / 100;
-
-        wavelengths.push({x: point.x, c: wavelength});
 
         ctx2.lineTo(updatedX, scaledY);
     });
@@ -164,13 +59,11 @@ function drawGraph() {
 
 }
 
-
-
-
-
-function downloadSortedWavelengths() {
+function downloadSortedWavelengthsIR() {
     const filteredWavelengths = wavelengths.filter(item => item.c !== 0);
     const sortedWavelengths = filteredWavelengths.slice().sort((a, b) => a.x - b.x);
+
+
 
     let regularFont = '../../font/Montserrat-Regular.ttf';
 
@@ -221,6 +114,10 @@ function downloadSortedWavelengths() {
         if (secondpage > 26) {
             howManyPerPage = 41;
         }
+
+        const offset = 700;
+
+        item.x = item.x + offset;
 
 
         if (loopCount < howManyPerPage) {
@@ -281,7 +178,3 @@ function downloadSortedWavelengths() {
     // Save the PDF
     pdf.save(`Spectroscopy ${whatIsIt}.pdf`);
 }
-
-
-
-
