@@ -1,4 +1,3 @@
-
 function getAlphaCodeForColumnIR(columnData, x) {
     let totalAlpha = 0;
 
@@ -52,8 +51,7 @@ function drawGraphIR() {
         if (point.yIR >= 940) {
             scaledY = canvasgraph.height - point.yIR / scalingFactorPeak;
 
-            wavelengths.push({ x: point.x, c: point.cIR });
-
+            wavelengths.push({x: point.x, c: point.cIR});
 
 
         } else {
@@ -155,37 +153,23 @@ function downloadSortedWavelengthsIR() {
     // Add second page
     pdf.addPage();
     pdf.setFontSize(28);
-    pdf.text("Important note about our  \n" +
-        "web-based spectroscopy software!", 10, 20);
+    pdf.text("Important note about our  \n" + "web-based spectroscopy software!", 10, 20);
 
     // Add Lorem Ipsum text (you can replace this with your actual text)
     pdf.setFontSize(16);
-    pdf.text("We are pleased to present our innovative web-based spectroscopy software, \n" +
-        "which is tailored to your analytical needs. However, as the sole developer, \n" +
-        "I must emphasize that the software may not be completely bug-free.", 10, 45);
+    pdf.text("We are pleased to present our innovative web-based spectroscopy software, \n" + "which is tailored to your analytical needs. However, as the sole developer, \n" + "I must emphasize that the software may not be completely bug-free.", 10, 45);
 
     pdf.setFontSize(16);
-    pdf.text("Although I have invested a great deal of time and effort to ensure \n" +
-        "the reliability of the software, I strongly recommend that users thoroughly \n" +
-        "review the software and check for potential problems before relying on the \n" +
-        "software's results.", 10, 75);
+    pdf.text("Although I have invested a great deal of time and effort to ensure \n" + "the reliability of the software, I strongly recommend that users thoroughly \n" + "review the software and check for potential problems before relying on the \n" + "software's results.", 10, 75);
 
     pdf.setFontSize(16);
-    pdf.text("I would also like to point out that, as the sole creator, \n" +
-        "I cannot accept any liability for the consequences of using the software \n" +
-        "or the data it calculates. Users are encouraged to use the software responsibly \n" +
-        "and to recognize their own responsibility \n" +
-        "for the interpretation and application of the results.", 10, 105);
+    pdf.text("I would also like to point out that, as the sole creator, \n" + "I cannot accept any liability for the consequences of using the software \n" + "or the data it calculates. Users are encouraged to use the software responsibly \n" + "and to recognize their own responsibility \n" + "for the interpretation and application of the results.", 10, 105);
 
     pdf.setFontSize(16);
-    pdf.text("Your feedback is invaluable and I will endeavor to address any issues \n" +
-        "or concerns that may arise. If you have any questions or encounter any \n" +
-        "difficulties, please feel free to contact me directly.", 10, 145);
+    pdf.text("Your feedback is invaluable and I will endeavor to address any issues \n" + "or concerns that may arise. If you have any questions or encounter any \n" + "difficulties, please feel free to contact me directly.", 10, 145);
 
     pdf.setFontSize(16);
-    pdf.text("Thank you for choosing our web-based spectroscopy software. \n" +
-        "I greatly appreciate your understanding and cooperation as I work to \n" +
-        "improve and refine the software to ensure an optimal user experience.", 10, 175);
+    pdf.text("Thank you for choosing our web-based spectroscopy software. \n" + "I greatly appreciate your understanding and cooperation as I work to \n" + "improve and refine the software to ensure an optimal user experience.", 10, 175);
 
 
     // Save the PDF
