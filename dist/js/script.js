@@ -8,6 +8,7 @@ let dataPoints = [];
 let wavelengths = [];
 let whatIsIt = '';
 let VLArray = [];
+let IRArray = [];
 
 function whichDownload() {
     if (whatIsIt === 'UV') {
@@ -84,16 +85,16 @@ function analyzeSpectrum() {
         let IRCode = 0;
 
         if (whatIsIt === 'UV') {
-            alphaCode = getAlphaCodeForColumnUV(columnData);
+            alphaCode = getAlphaCodeForColumnUV(columnData, x);
         } else if (whatIsIt === 'Visible Light') {
             VLCode = getAlphaCodeForColumnVL(columnData, x, canvas.width);
         } else if (whatIsIt === 'IR') {
-            IRCode = getAlphaCodeForColumnIR(columnData);
+            IRCode = getAlphaCodeForColumnIR(columnData, x);
         }
 
 
         // console.log(colorCode);
-        dataPoints.push({x: x, y: alphaCode.averageAlpha, yVL: VLCode.averageAlpha, yIR: IRCode.averageAlpha});
+        dataPoints.push({x: x, y: alphaCode.averageAlpha, yVL: VLCode.averageAlpha, yIR: IRCode.averageAlpha, cIR: IRCode.wavelengthtest, cUV: alphaCode.wavelengthtest, cVL: VLCode.wavelengthtest});
 
 
     }
@@ -101,7 +102,7 @@ function analyzeSpectrum() {
 }
 
 
-function getAlphaCodeForColumnUV(columnData) {
+function getAlphaCodeForColumnUV(columnData, x) {
     let totalAlpha = 0;
 
     for (let i = 0; i < columnData.length; i += 5) {
@@ -109,8 +110,25 @@ function getAlphaCodeForColumnUV(columnData) {
     }
 
     const averageAlpha = totalAlpha / (columnData.length / 5 / 5);
+    const minPosition = 0;
+    const maxPosition = canvas.width;
 
-    return {averageAlpha};
+    const calculatedPosition = Math.min(Math.max(x, minPosition), maxPosition);
+
+    let wavelengthtest = 0;
+    if (averageAlpha >= 940) {
+
+        // Calculate the wavelength based on the position
+        const minWavelength = 10; // corresponds to minPosition
+        const maxWavelength = 380; // corresponds to maxPosition
+
+
+        wavelengthtest = minWavelength + ((calculatedPosition - minPosition) / (maxPosition - minPosition)) * (maxWavelength - minWavelength);
+        wavelengthtest = Math.round(wavelengthtest * 100) / 100;
+    }
+
+
+    return {averageAlpha, wavelengthtest};
 }
 
 
@@ -134,19 +152,17 @@ function drawGraph() {
 
     dataPoints.forEach((point, index) => {
         let scaledY = 0;
-        let wavelength = 0;
         if (point.y >= 940) {
             scaledY = canvasgraph.height - point.y / scalingFactorPeak;
-            wavelength = wavelength + scaledY * (400 - 10) / 50;
+
+            wavelengths.push({ x: point.x, c: point.cUV });
+
+
 
         } else {
             scaledY = canvasgraph.height - point.y / scalingFactor;
         }
         const updatedX = point.x;
-
-        wavelength = Math.round(wavelength * 100) / 100;
-
-        wavelengths.push({x: point.x, c: wavelength});
 
         ctx2.lineTo(updatedX, scaledY);
     });
@@ -225,7 +241,7 @@ function downloadSortedWavelengths() {
 
         if (loopCount < howManyPerPage) {
             pdf.addFont(regularFont);
-            pdf.text(10, yPosition, `Wavelength: ${item.x}nm`);
+            pdf.text(10, yPosition, `Position (Pixel): ${item.x},         Wavelength: ${item.c}nm`);
             yPosition += 7;
 
             // Inkrementiere die Zählvariable

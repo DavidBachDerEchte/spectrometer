@@ -1,4 +1,5 @@
-function getAlphaCodeForColumnIR(columnData) {
+
+function getAlphaCodeForColumnIR(columnData, x) {
     let totalAlpha = 0;
 
     for (let i = 0; i < columnData.length; i += 5) {
@@ -7,7 +8,25 @@ function getAlphaCodeForColumnIR(columnData) {
 
     const averageAlpha = totalAlpha / (columnData.length / 5 / 5);
 
-    return {averageAlpha};
+    const minPosition = 0;
+    const maxPosition = canvas.width;
+
+    const calculatedPosition = Math.min(Math.max(x, minPosition), maxPosition);
+
+    let wavelengthtest = 0;
+    if (averageAlpha >= 940) {
+
+        // Calculate the wavelength based on the position
+        const minWavelength = 700; // corresponds to minPosition
+        const maxWavelength = 1000; // corresponds to maxPosition
+
+
+        wavelengthtest = minWavelength + ((calculatedPosition - minPosition) / (maxPosition - minPosition)) * (maxWavelength - minWavelength);
+        wavelengthtest = Math.round(wavelengthtest * 100) / 100;
+    }
+
+
+    return {averageAlpha, wavelengthtest};
 }
 
 function drawGraphIR() {
@@ -27,16 +46,15 @@ function drawGraphIR() {
     ctx2.stroke();
     ctx2.beginPath();
 
+
     dataPoints.forEach((point, index) => {
         let scaledY = 0;
-        let wavelength = 700;
         if (point.yIR >= 940) {
-            console.log(point.yIR);
             scaledY = canvasgraph.height - point.yIR / scalingFactorPeak;
-            wavelength = wavelength + scaledY * (1000 - 700) / 50;
+
+            wavelengths.push({ x: point.x, c: point.cIR });
 
 
-            wavelengths.push({x: point.x, c: wavelength});
 
         } else {
             scaledY = canvasgraph.height - point.yIR / scalingFactor;
@@ -62,7 +80,6 @@ function drawGraphIR() {
 function downloadSortedWavelengthsIR() {
     const filteredWavelengths = wavelengths.filter(item => item.c !== 0);
     const sortedWavelengths = filteredWavelengths.slice().sort((a, b) => a.x - b.x);
-
 
 
     let regularFont = '../../font/Montserrat-Regular.ttf';
@@ -115,14 +132,10 @@ function downloadSortedWavelengthsIR() {
             howManyPerPage = 41;
         }
 
-        const offset = 700;
-
-        item.x = item.x + offset;
-
 
         if (loopCount < howManyPerPage) {
             pdf.addFont(regularFont);
-            pdf.text(10, yPosition, `Wavelength: ${item.x}nm`);
+            pdf.text(10, yPosition, `Position (Pixel): ${item.x},         Wavelength: ${item.c}nm`);
             yPosition += 7;
 
             // Inkrementiere die Zählvariable
